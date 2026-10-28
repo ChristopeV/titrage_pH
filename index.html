@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Titrage pH-métrique : acide éthanoïque / soude</title>
+<style>
+:root{--bg:#1c1b22;--bar:#26252e;--ink:#eceaf2;--mute:#9a97a8;--line:#3a3845;--btn:#2563eb;--btn2:#1d4fc4}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+#stageWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:4px}
+#stage{position:relative;aspect-ratio:4/3;max-width:100%;max-height:100%;height:100%;width:auto;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);border-radius:4px;overflow:hidden;cursor:pointer;user-select:none;-webkit-user-select:none}
+.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .9s ease}
+.slide.on{opacity:1;pointer-events:auto}
+.slide.interactive{cursor:default}
+.slide.title{background:#ffcc99;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-family:Arial,Helvetica,sans-serif;color:#000;font-size:calc(var(--u)*40*1.333);line-height:1.2;padding:0 4%}
+.slide.diag{background:#f2f2f2;color:#000;--tx:#111;--mut:#555;--bd:#cfcfcf;--ac:#1f5fe0;--ok:#0a8f3d;--bad:#d62828;--liq:#8ec9ee;--bur:#f0a04b;--glass:#eef3f8}
+.slide>svg{width:100%;height:100%;display:block}
+.slide svg text{font-family:"Times New Roman",Times,"Liberation Serif",serif;font-weight:700;fill:#111}
+svg.app text{font-size:12px}svg.ch text{font-size:13px}svg.plot text{font-size:19px}
+.line{stroke:var(--tx);fill:none;stroke-width:2}.gl{fill:var(--glass);stroke:var(--mut);stroke-width:1.5}.ax{stroke:var(--bd)}
+.ov{position:absolute;inset:0;pointer-events:none;font-family:"Times New Roman",Times,"Liberation Serif",serif}
+.slide.interactive .ov *{pointer-events:auto}
+.h{position:absolute;left:calc(var(--u)*40);top:calc(var(--u)*20);font-weight:700;font-size:calc(var(--u)*28);line-height:1.1}
+.sub{position:absolute;left:calc(var(--u)*40);top:calc(var(--u)*62);width:calc(var(--u)*880);font-size:calc(var(--u)*20);line-height:1.25}
+.blk{position:absolute;width:calc(var(--u)*420);font-size:calc(var(--u)*19);line-height:1.25}
+.blk h3{margin:0 0 calc(var(--u)*6);font-size:calc(var(--u)*23);color:#1d4fc4;border-left:calc(var(--u)*5) solid #1d4fc4;padding-left:calc(var(--u)*8)}
+.blk ul{margin:0;padding-left:calc(var(--u)*22)}.blk li{margin-bottom:calc(var(--u)*4)}
+.cap{position:absolute;left:calc(var(--u)*60);width:calc(var(--u)*840);font-size:calc(var(--u)*22);line-height:1.25}
+.slide button{font:700 calc(var(--u)*15) system-ui,sans-serif;padding:calc(var(--u)*5) calc(var(--u)*12);min-height:0;border-radius:calc(var(--u)*8);border:1px solid var(--btn);background:var(--btn);color:#fff;cursor:pointer}
+.slide button:hover:not(:disabled){filter:brightness(1.12)}.slide button.on{background:#1b3f9e;border-color:#1b3f9e}.slide button:disabled{opacity:.45;cursor:default}
+.slide input[type=range]{accent-color:var(--btn)}
+#rc{position:absolute;left:calc(var(--u)*480);top:calc(var(--u)*408);width:calc(var(--u)*460);display:flex;flex-direction:column;align-items:flex-start;gap:calc(var(--u)*10)}
+.pour{position:static;width:100%;border:calc(var(--u)*2) solid var(--btn);border-radius:calc(var(--u)*10);padding:calc(var(--u)*8) calc(var(--u)*10);background:#fff;font:calc(var(--u)*15) system-ui,sans-serif;color:#111}
+.pour.start{animation:pulse 1.6s infinite}@keyframes pulse{50%{box-shadow:0 0 0 calc(var(--u)*6) rgba(37,99,235,.3)}}
+.pour .ph{font-weight:700;margin-bottom:calc(var(--u)*2)}.opt{display:flex;align-items:center;gap:calc(var(--u)*8);margin:calc(var(--u)*6) 0}
+.n{display:inline-grid;place-items:center;flex:none;width:calc(var(--u)*22);height:calc(var(--u)*22);border-radius:50%;background:var(--btn);color:#fff;font-weight:700;font-size:calc(var(--u)*13)}
+.lb{min-width:calc(var(--u)*165);font-weight:600}.opt input[type=range]{flex:1;min-width:0}
+#expl{position:static}
+#xhint{position:static;font:calc(var(--u)*15) system-ui,sans-serif;color:#333}
+.ex{position:absolute;left:calc(var(--u)*48);right:calc(var(--u)*48);top:calc(var(--u)*72);font-size:calc(var(--u)*20);line-height:1.25}
+.ex p{margin:0 0 calc(var(--u)*9)}.eq{text-align:center;font-weight:700;font-size:calc(var(--u)*23)}
+.ex .row{display:flex;align-items:center;gap:calc(var(--u)*8);margin:calc(var(--u)*10) 0}
+.ex input[type=text]{font:calc(var(--u)*18) system-ui,sans-serif;width:calc(var(--u)*190);padding:calc(var(--u)*4) calc(var(--u)*8);border:1px solid #888;border-radius:calc(var(--u)*6);user-select:text;-webkit-user-select:text}
+#fb{font-weight:700;margin-left:calc(var(--u)*8)}
+#corr{border:1px solid #bbb;border-left:calc(var(--u)*5) solid var(--btn);border-radius:calc(var(--u)*8);background:#fff;padding:calc(var(--u)*6) calc(var(--u)*14);font-size:calc(var(--u)*18)}
+#corr p{margin:0 0 calc(var(--u)*4)}#corr ol{margin:0;padding-left:calc(var(--u)*22)}#corr li{margin-bottom:calc(var(--u)*3)}
+#hint{position:absolute;left:0;right:0;bottom:2.2%;text-align:center;font-size:calc(var(--u)*15);color:#77757f;transition:opacity .4s;pointer-events:none;font-family:system-ui,sans-serif}
+#hint.off{opacity:0}
+#bar{flex:none;display:flex;align-items:center;gap:7px;justify-content:center;flex-wrap:wrap;padding:4px 8px;background:var(--bar);border-top:1px solid var(--line)}
+#bar button{font:inherit;font-weight:600;color:#fff;background:var(--btn2);border:1px solid var(--btn);border-radius:6px;padding:4px 9px;cursor:pointer;min-height:28px;font-size:13px}
+#bar button:hover{background:var(--btn)}
+#bar button:focus-visible{outline:2px solid #8fb4ff;outline-offset:2px}
+#bar button[disabled]{opacity:.4;cursor:default}
+#bar button.primary{background:#3b82f6;border-color:#3b82f6}
+#dots{display:flex;gap:5px;align-items:center}
+#bar .dot{width:9px;height:9px;border-radius:50%;background:#3b4f86;border:0;padding:0;min-height:0;cursor:pointer}
+#bar .dot.on{background:#6aa5ff}
+#info{color:var(--mute);font-size:12px;min-width:105px;text-align:center;font-variant-numeric:tabular-nums}
+@media (max-width:560px){#info{display:none}}
+@media (max-height:480px){#bar{padding:4px 8px;gap:6px}#bar button{padding:4px 10px;min-height:30px;font-size:13px}#info{display:none}#bar .dot{width:9px;height:9px}#stageWrap{padding:6px}}
+#rot{display:none;flex:none;text-align:center;font-size:13px;padding:6px 10px;background:#26252e;color:#cfd3dc;border-bottom:1px solid var(--line)}
+@media (orientation:portrait) and (max-width:700px){#rot{display:block}}
+@media (prefers-reduced-motion:reduce){.slide{transition:none}.pour.start{animation:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="rot">📱 Pour une meilleure lecture, tournez le téléphone en mode paysage.</div>
+  <div id="stageWrap"><div id="stage" aria-live="polite"><div id="hint"></div></div></div>
+  <div id="bar">
+    <button id="prev" aria-label="Précédent">◀ Précédent</button>
+    <div id="dots" role="tablist" aria-label="Diapositives"></div>
+    <button id="next" class="primary" aria-label="Suivant">Suivant ▶</button>
+    <button id="auto" aria-label="Lecture automatique">▶ Lecture auto</button>
+    <button id="reset" aria-label="Rejouer la diapositive">↺ Rejouer</button>
+    <button id="fs" aria-label="Plein écran">⛶</button>
+    <span id="info"></span>
+  </div>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const stage=document.getElementById('stage'),hint=document.getElementById('hint');
+const $=id=>document.getElementById(id),f=(x,n)=>x.toFixed(n).replace('.',',');
+function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+// ---------- données (valeurs mesurées de l'animation d'origine) ----------
+const CB=0.010,VA=10;
+const D=[[0,3.42],[1.4,3.91],[2.8,4.19],[4.2,4.40],[5.6,4.59],[7,4.81],[8.4,4.90],[9.8,5.08],[11.2,5.40],[12.6,5.68],[13.3,6.02],[14,8.31],[14.2357,10.6],[14.4714,10.9],[14.9429,11.2],[15.4143,11.3],[15.8857,11.4],[16.3571,11.5],[16.8286,11.6],[17.7714,11.7],[18.7143,11.8],[20.1286,11.9],[21.8571,11.9],[25,11.9]];
+function mono(P){const n=P.length,h=[],d=[],m=[];
+ for(let i=0;i<n-1;i++){h[i]=P[i+1][0]-P[i][0];d[i]=(P[i+1][1]-P[i][1])/h[i]}
+ m[0]=d[0];m[n-1]=d[n-2];for(let i=1;i<n-1;i++)m[i]=d[i-1]*d[i]<=0?0:(d[i-1]+d[i])/2;
+ for(let i=0;i<n-1;i++){if(d[i]===0){m[i]=m[i+1]=0;continue}const a=m[i]/d[i],b=m[i+1]/d[i],q=a*a+b*b;if(q>9){const t=3/Math.sqrt(q);m[i]=t*a*d[i];m[i+1]=t*b*d[i]}}
+ const seg=x=>{let i=0;while(i<n-2&&x>P[i+1][0])i++;return i};
+ const F=x=>{if(x<=P[0][0])return P[0][1];if(x>=P[n-1][0])return P[n-1][1];const i=seg(x),t=(x-P[i][0])/h[i],t2=t*t,t3=t2*t;
+  return(2*t3-3*t2+1)*P[i][1]+(t3-2*t2+t)*h[i]*m[i]+(-2*t3+3*t2)*P[i+1][1]+(t3-t2)*h[i]*m[i+1]};
+ const dF=x=>{if(x<=P[0][0])return m[0];if(x>=P[n-1][0])return 0;const i=seg(x),t=(x-P[i][0])/h[i],t2=t*t;
+  return((6*t2-6*t)*P[i][1]+(3*t2-4*t+1)*h[i]*m[i]+(-6*t2+6*t)*P[i+1][1]+(3*t2-2*t)*h[i]*m[i+1])/h[i]};
+ return{F,dF}}
+const samp=(F,a,b,st)=>{const o=[];let x=a;for(;x<b-1e-9;x+=st)o.push([+x.toFixed(4),F(x)]);o.push([b,F(b)]);return o};
+const HC=mono(D),pH=v=>HC.F(v),dH=v=>HC.dF(v);
+const dp=i=>i==0||i==D.length-1?null:(D[i+1][1]-D[i-1][1])/(D[i+1][0]-D[i-1][0]);
+const pts1=D.map((d,i)=>dp(i)==null?null:[d[0],dp(i)]).filter(Boolean),dmax=Math.max(...pts1.map(p=>p[1])),VBE=pts1.find(p=>p[1]==dmax)[0];
+const T1=12.6,slope=dH(T1);let lo=15.0,hi=22.0;for(let k=0;k<60;k++){const mid=(lo+hi)/2;if(dH(mid)>slope)lo=mid;else hi=mid}const T2=(lo+hi)/2;
+const b1=pH(T1)-slope*T1,b2=pH(T2)-slope*T2,bm=(b1+b2)/2;
+let VBE2=T1;for(let x=T1;x<=T2;x+=.001)if(pH(x)>=slope*x+bm){VBE2=x;break}
+const pE=pH(VBE2);
+const VBs='V<tspan dy="5" font-size="70%">B</tspan>',VBEs='V<tspan dy="5" font-size="70%">BE</tspan>';
+// ---------- fabrique de diapositives ----------
+const slides=[];let uid=0;
+function addSlide(kind,steps,inter){
+  const el=document.createElement('section');el.className='slide '+(kind==='title'?'title':'diag')+(inter?' interactive':'');
+  stage.insertBefore(el,hint);
+  const sl={el,kind,steps:steps||0,interactive:!!inter,nodes:[]};
+  if(kind!=='title'){sl.svg=mk('svg',{viewBox:'0 0 960 720',preserveAspectRatio:'xMidYMid meet'},el);sl.defs=mk('defs',{},sl.svg);
+    sl.ov=document.createElement('div');sl.ov.className='ov';el.appendChild(sl.ov)}
+  slides.push(sl);return sl}
+function titleSlide(lines){const sl=addSlide('title',0);const d=document.createElement('div');d.innerHTML=lines.map(l=>'<div>'+l+'</div>').join('');sl.el.appendChild(d)}
+function heading(sl,html,sub){const h=document.createElement('div');h.className='h';h.innerHTML=html;sl.ov.appendChild(h);
+  if(sub){const s=document.createElement('div');s.className='sub';s.innerHTML=sub;sl.ov.appendChild(s)}}
+function node(sl,g,o){const n=Object.assign({g,step:0,until:1e9},o);sl.nodes.push(n);return n}
+function wline(sl,x1,y1,x2,y2,attrs,o,clipId){
+  const id='mk'+(uid++),outer=mk('g',clipId?{'clip-path':'url(#'+clipId+')'}:{},sl.svg),g=mk('g',{},outer);
+  mk('line',Object.assign({x1,y1,x2,y2,fill:'none'},attrs),g);
+  const mask=mk('mask',{id,maskUnits:'userSpaceOnUse',x:-100,y:-100,width:1200,height:1000},sl.defs);
+  const ml=mk('line',{x1,y1,x2,y2,stroke:'#fff','stroke-width':40,pathLength:1,'stroke-dasharray':'1 1'},mask);
+  g.setAttribute('mask','url(#'+id+')');return node(sl,g,Object.assign({ml},o))}
+function wpoly(sl,points,attrs,o){const pl=mk('polyline',Object.assign({points,fill:'none',pathLength:1,'stroke-dasharray':'1 1'},attrs),sl.svg);return node(sl,pl,Object.assign({path:pl},o))}
+function group(sl,html,o){const g=mk('g',{},sl.svg);g.innerHTML=html;return node(sl,g,o)}
+function captions(sl,arr,top){arr.forEach((h,k)=>{const d=document.createElement('div');d.className='cap';d.style.top='calc(var(--u)*'+top+')';d.innerHTML=h;sl.ov.appendChild(d);node(sl,d,{step:k,until:k})})}
+const txt=(x,y,h,st,an)=>`<text x="${x}" y="${y}" ${an?'text-anchor="'+an+'"':''} style="${st||''}">${h}</text>`;
+const dots=(arr,X,Y,c)=>arr.map(d=>`<circle cx="${X(d[0])}" cy="${Y(d[1])}" r="3.5" fill="${c}"/>`).join('');
+
+// ---------- 1. titre ----------
+titleSlide(['Titrage pH-métrique','d’une solution d’acide éthanoïque','par une solution d’hydroxyde de sodium (soude)']);
+
+// ---------- 2. protocole ----------
+{const sl=addSlide('diagram',4);
+ heading(sl,'Protocole du titrage','Déterminer la concentration inconnue c<sub>A</sub> d’une solution d’acide éthanoïque (solution titrée) à l’aide d’une solution de soude (solution titrante) de concentration c<sub>B</sub> connue.');
+ const B=[{x:40,y:165,t:'Étalonnage du pH-mètre',l:['Se munir de deux solutions tampon adaptées.','Mesurer la température des solutions et la régler sur le pH-mètre.','Enlever le capuchon, rincer l’électrode et la sécher délicatement avec un papier absorbant.','Afficher le pH de la solution tampon avec le bouton de réglage ; rincer et sécher l’électrode entre chaque tampon.']},
+ {x:500,y:165,t:'Préparation du titrage',l:['Prélever V<sub>A</sub> = 10,0 mL d’acide éthanoïque à la pipette jaugée (consignes de sécurité !) et les placer dans un bécher.','Ajouter environ 20 mL d’eau distillée pour immerger complètement la sonde : cet ajout ne modifie pas le résultat du titrage.','Remplir la burette (préalablement rincée) avec la solution de soude de concentration c<sub>B</sub>.']},
+ {x:40,y:440,t:'Titrage',l:['Déposer le bécher muni d’un turbulent sur l’agitateur magnétique, introduire la sonde et mettre l’agitation en marche.','Verser progressivement le réactif titrant et relever le pH.']},
+ {x:500,y:440,t:'Rangement',l:['Éteindre le pH-mètre, arrêter l’agitation, rincer l’électrode, protéger la sonde et ranger le pH-mètre.']}];
+ B.forEach((b,i)=>{const d=document.createElement('div');d.className='blk';d.style.left='calc(var(--u)*'+b.x+')';d.style.top='calc(var(--u)*'+b.y+')';
+  d.innerHTML='<h3>'+(i+1)+'. '+b.t+'</h3><ul>'+b.l.map(x=>'<li>'+x+'</li>').join('')+'</ul>';sl.ov.appendChild(d);node(sl,d,{step:i+1})})}
+
+// ---------- 3. titre ----------
+titleSlide(['Réalisation','du titrage pH-métrique']);
+
+// ---------- 4. titrage interactif ----------
+(function(){
+ const sl=addSlide('diagram',0,true);heading(sl,'Montage et mesures expérimentales');
+ const ap=mk('svg',{x:20,y:66,width:450,height:540,viewBox:'0 0 300 360',class:'app'},sl.svg);
+ ap.innerHTML=`
+<rect x="60" y="296" width="170" height="22" rx="4" class="gl"/><rect x="85" y="288" width="120" height="8" rx="2" class="gl"/>
+<line x1="35" y1="20" x2="35" y2="318" class="line" style="stroke-width:4"/><line x1="25" y1="318" x2="60" y2="318" class="line" style="stroke-width:4"/>
+<line x1="35" y1="140" x2="143" y2="140" class="line" style="stroke-width:5"/>
+<rect x="143" y="30" width="14" height="170" class="gl"/><rect id="bl" x="144.5" width="11" fill="var(--bur)" opacity=".85"/>
+<g id="ticks"></g>
+<path d="M146 200 h8 l-2 24 h-4 z" class="gl"/><line x1="138" y1="208" x2="162" y2="208" class="line"/>
+<circle id="drop" cx="150" cy="234" r="3" fill="var(--liq)" opacity="0"/>
+<path d="M108 244 v48 q0 4 4 4 h76 q4 0 4 -4 v-48" class="gl" style="fill:none"/><rect id="sol" x="109.5" width="81" fill="var(--liq)" opacity=".8"/>
+<line x1="178" y1="196" x2="178" y2="282" stroke="var(--ac)" stroke-width="5" stroke-linecap="round"/>
+<path d="M178 196 q6 -40 40 -34 l0 24" class="line" style="stroke-width:1.2"/>
+<rect x="218" y="170" width="70" height="120" rx="6" class="gl"/><rect x="224" y="178" width="58" height="26" rx="3" fill="#c9d3b8"/>
+<text id="phd" x="253" y="197" text-anchor="middle" style="fill:#222;font:700 16px monospace">3,42</text>
+<text x="253" y="218" text-anchor="middle">pH-mètre</text><circle cx="235" cy="240" r="5" fill="#b0245f"/><circle cx="253" cy="240" r="5" fill="#b0245f"/><circle cx="271" cy="240" r="5" fill="#b0245f"/><circle cx="235" cy="258" r="5" fill="#b0245f"/><circle cx="253" cy="258" r="5" fill="#b0245f"/><circle cx="271" cy="258" r="5" fill="#b0245f"/>
+<text x="168" y="64" class="t" style="font:700 17px 'Times New Roman',Times,serif">V<tspan dy="4" font-size="11">B</tspan><tspan dy="-4"> = </tspan><tspan id="vb">0,0 mL</tspan></text><text x="46" y="24" style="font-size:17px">Soude : c<tspan dy="4" font-size="11">B</tspan><tspan dy="-4"> = 1,0×10</tspan><tspan dy="-7" font-size="11">−2</tspan><tspan dy="7"> mol·L</tspan><tspan dy="-7" font-size="11">−1</tspan></text><text x="150" y="337" text-anchor="middle" style="font-size:17px">10,0 mL d’acide éthanoïque</text><text x="150" y="352" text-anchor="middle" style="font-size:10px">+ 20 mL d’eau distillée</text>
+`;
+ mk('svg',{x:480,y:66,width:460,height:329,viewBox:'0 0 420 300',class:'ch',id:'ch'},sl.svg);
+ const pour=document.createElement('div');pour.id='pour';pour.className='pour start';
+ pour.innerHTML=`<div class="ph">Début de l’expérience : versez la soude de 3 façons</div>
+ <div class="opt"><span class="n">1</span><span class="lb">Faire glisser le curseur</span><input type="range" id="sl" min="0" max="250" value="0"></div>
+ <div class="opt"><span class="n">2</span><span class="lb">Ajouter par pas</span><button id="b05">+ 0,5 mL</button><button id="b1">+ 1 mL</button></div>
+ <div class="opt"><span class="n">3</span><span class="lb">Verser automatiquement</span><button id="play">▶ Verser</button></div>
+ <div class="opt"><button id="rz">↺ Remise à zéro</button></div>`;
+ const rc=document.createElement('div');rc.id='rc';sl.ov.appendChild(rc);rc.appendChild(pour);
+ const ex=document.createElement('button');ex.id='expl';ex.textContent='Détermination du volume équivalent';ex.disabled=true;rc.appendChild(ex);
+ const xh=document.createElement('div');xh.id='xhint';xh.innerHTML='Effectuez progressivement les mesures jusqu’à V<sub>B</sub> = 25,0 mL pour accéder à la suite.';rc.appendChild(xh);
+ $('ticks').innerHTML=[0,5,10,15,20,25].map(m=>`<line x1="143" x2="136" y1="${40+6*m}" y2="${40+6*m}" class="line" style="stroke-width:1"/><text x="130" y="${44+6*m}" text-anchor="end">${m}</text>`).join('');
+ let v=0,maxV=0,measuredMax=0,timer=null;window.titrageVolumeComplet=()=>measuredMax>=25;const X=v=>40+v/25*360,Y=p=>255-p/14*240;
+ let AX='';for(let p=0;p<=14;p+=2)AX+=`<line class="ax" x1="40" x2="400" y1="${Y(p)}" y2="${Y(p)}"/><text x="32" y="${Y(p)+4}" text-anchor="end">${p}</text>`;
+ for(let m=0;m<=25;m+=5)AX+=`<line class="ax" y1="15" y2="255" x1="${X(m)}" x2="${X(m)}"/><text x="${X(m)}" y="270" text-anchor="middle">${m}</text>`;
+ AX+=`<text x="46" y="10">pH</text><text x="400" y="288" text-anchor="end">V<tspan dy="3" font-size="8">B</tspan><tspan dy="-3"> (mL)</tspan></text>`;
+ const dot=d=>`<circle cx="${X(d[0])}" cy="${Y(d[1])}" r="2.5" fill="var(--ac)"/>`,poly=q=>`<polyline fill="none" stroke="var(--ac)" stroke-width="2" points="${q.map(d=>X(d[0])+','+Y(d[1])).join(' ')}"/>`;
+ function chart(){const pts=D.filter(d=>d[0]<=maxV),q=samp(pH,0,maxV,.05),p=pH(v);
+  $('ch').innerHTML=AX+poly(q)+pts.map(dot).join('')+`<line x1="${X(v)}" x2="${X(v)}" y1="${Y(p)}" y2="255" stroke="var(--bad)" stroke-dasharray="3 3"/><line x1="40" x2="${X(v)}" y1="${Y(p)}" y2="${Y(p)}" stroke="var(--bad)" stroke-dasharray="3 3"/><circle cx="${X(v)}" cy="${Y(p)}" r="5" fill="var(--bad)"/>`}
+ function upd(){maxV=Math.max(maxV,v);const p=pH(v);$('bl').setAttribute('y',40+6*v);$('bl').setAttribute('height',160-6*v);
+  const h=Math.min(46,(30+v)/55*46*1.1);$('sol').setAttribute('y',296-h);$('sol').setAttribute('height',h);
+  $('vb').textContent=f(v,1)+' mL';$('phd').textContent=f(p,2);$('sl').value=Math.round(v*10);
+  $('drop').setAttribute('opacity',timer&&v<25?1:0);$('pour').classList.toggle('start',maxV==0);
+  $('expl').disabled=measuredMax<25;$('xhint').innerHTML=measuredMax<25?'Versez progressivement la soude jusqu’à V<sub>B</sub> = 25,0 mL pour poursuivre.':'Volume V<sub>B</sub> entièrement versé : vous pouvez poursuivre.';$('xhint').style.display='block';chart()}
+ function set(x){v=Math.max(0,Math.min(25,Math.round(x*10)/10));upd()}
+ function stop(){clearInterval(timer);timer=null;$('play').textContent='▶ Verser';$('play').classList.remove('on')}
+ $('sl').oninput=e=>{stop();set(e.target.value/10)};
+ $('b05').onclick=()=>{stop();const old=v;set(v+.5);if(old<=measuredMax+1.01)measuredMax=Math.max(measuredMax,v);upd()};$('b1').onclick=()=>{stop();const old=v;set(v+1);if(old<=measuredMax+1.01)measuredMax=Math.max(measuredMax,v);upd()};
+ $('rz').onclick=()=>{stop();maxV=0;measuredMax=0;set(0)};
+ $('play').onclick=()=>{if(timer){stop();upd();return}if(v>=25||v>measuredMax+1.01)v=0;$('play').textContent='⏸ Pause';$('play').classList.add('on');
+  timer=setInterval(()=>{const s=(v>9&&v<11)?.05:.1;v=Math.round((v+s)*100)/100;if(v>=25){v=25;stop()}measuredMax=Math.max(measuredMax,v);upd()},80)};
+ $('expl').onclick=e=>{e.stopPropagation();stop();stopAuto();next()};
+ sl.onLeave=stop;sl.onReset=()=>{stop();maxV=0;measuredMax=0;set(0)};
+ upd();
+})();
+
+// ---------- 5. titre ----------
+titleSlide(['Détermination','du volume équivalent']);
+
+// ---------- 6. méthode 1 ----------
+{const sl=addSlide('diagram',3);heading(sl,'Méthode 1 : courbe dérivée');sl.svg.setAttribute('class','plot');
+ const P={x:110,y:110,w:720,h:420},X=v=>P.x+v/25*P.w,Yp=p=>P.y+P.h-p/14*P.h,Yd=d=>P.y+P.h-d/5*P.h;let g='';
+ for(let p=0;p<=14;p+=2)g+=`<line class="ax" x1="${P.x}" x2="${P.x+P.w}" y1="${Yp(p)}" y2="${Yp(p)}"/>`+txt(P.x+P.w+10,Yp(p)+6,p,'fill:#c06a00');
+ for(let d=0;d<=5;d++)g+=txt(P.x-12,Yd(d)+6,d,'fill:#1f5fe0','end')+`<line x1="${P.x-6}" x2="${P.x}" y1="${Yd(d)}" y2="${Yd(d)}" stroke="#1f5fe0" stroke-width="2"/>`;
+ for(let m=0;m<=25;m+=5)g+=`<line class="ax" x1="${X(m)}" x2="${X(m)}" y1="${P.y}" y2="${P.y+P.h}"/>`+txt(X(m),P.y+P.h+28,m,'','middle');
+ g+=`<line x1="${P.x}" x2="${P.x}" y1="${P.y}" y2="${P.y+P.h}" stroke="#111" stroke-width="2"/><line x1="${P.x}" x2="${P.x+P.w}" y1="${P.y+P.h}" y2="${P.y+P.h}" stroke="#111" stroke-width="2"/>`;
+ g+=txt(P.x,P.y-16,'dpH/d'+VBs,'fill:#1f5fe0;font-size:22px')+txt(P.x+P.w,P.y-16,'pH','fill:#c06a00;font-size:22px','end')+txt(P.x+P.w,P.y+P.h+58,VBs+'<tspan dy="-5"> (mL)</tspan>','font-size:22px','end');
+ mk('g',{},sl.svg).innerHTML=g;
+ wpoly(sl,samp(pH,0,23,.05).map(d=>X(d[0])+','+Yp(d[1])).join(' '),{stroke:'#e07b00','stroke-width':4},{step:1,dur:1200});
+ group(sl,dots(D,X,Yp,'#e07b00'),{step:1});
+ wpoly(sl,samp(mono(pts1).F,pts1[0][0],pts1[pts1.length-1][0],.05).map(d=>X(d[0])+','+Yd(d[1])).join(' '),{stroke:'#1f5fe0','stroke-width':4},{step:2,dur:1200});
+ group(sl,dots(pts1,X,Yd,'#1f5fe0'),{step:2});
+ group(sl,`<line x1="${X(VBE)}" x2="${X(VBE)}" y1="${Yd(dmax)}" y2="${P.y+P.h}" stroke="#0a8f3d" stroke-width="3" stroke-dasharray="8 6"/><circle cx="${X(VBE)}" cy="${Yd(dmax)}" r="9" fill="#0a8f3d"/>`+txt(X(VBE)+20,Yd(dmax)+2,VBEs+'<tspan dy="-5"> = '+f(VBE,1)+' mL</tspan>','fill:#0a8f3d;font-size:26px'),{step:3});
+ captions(sl,['On cherche le volume V<sub>BE</sub> pour lequel le pH varie le plus vite.','On trace la courbe pH = f(V<sub>B</sub>) à partir des mesures (axe de droite).','On calcule, pour chaque volume, le coefficient directeur de la tangente dpH/dV<sub>B</sub> et on trace sa courbe (axe de gauche).','dpH/dV<sub>B</sub> est maximal au volume équivalent : <b>V<sub>BE</sub> = '+f(VBE,1)+' mL</b>.'],606)}
+
+// ---------- 7. méthode 2 ----------
+{const sl=addSlide('diagram',5);heading(sl,'Méthode 2 : tangentes parallèles');sl.svg.setAttribute('class','plot');
+ const P={x:110,y:84,w:720,h:420},X=v=>P.x+v/25*P.w,Y=p=>P.y+P.h-p/14*P.h,pxY=P.h/14;let g='';
+ for(let p=0;p<=14;p+=2)g+=`<line class="ax" x1="${P.x}" x2="${P.x+P.w}" y1="${Y(p)}" y2="${Y(p)}"/>`+txt(P.x-12,Y(p)+6,p,'','end');
+ for(let m=0;m<=25;m+=5)g+=`<line class="ax" x1="${X(m)}" x2="${X(m)}" y1="${P.y}" y2="${P.y+P.h}"/>`+txt(X(m),P.y+P.h+28,m,'','middle');
+ g+=`<line x1="${P.x}" x2="${P.x}" y1="${P.y}" y2="${P.y+P.h}" stroke="#111" stroke-width="2"/><line x1="${P.x}" x2="${P.x+P.w}" y1="${P.y+P.h}" y2="${P.y+P.h}" stroke="#111" stroke-width="2"/>`;
+ g+=txt(P.x,P.y-12,'pH','font-size:22px')+txt(P.x+P.w,P.y+P.h+58,VBs+'<tspan dy="-5"> (mL)</tspan>','font-size:22px','end');
+ g+=`<polyline fill="none" stroke="#1f5fe0" stroke-width="4" stroke-linejoin="round" points="${samp(pH,0,23,.05).map(d=>X(d[0])+','+Y(d[1])).join(' ')}"/>`+dots(D,X,Y,'#1f5fe0');
+ mk('g',{},sl.svg).innerHTML=g;
+ const cp=mk('clipPath',{id:'cp7'},sl.defs);mk('rect',{x:P.x,y:P.y,width:P.w,height:P.h},cp);
+ const L=(b)=>[X(0),Y(b),X(25),Y(slope*25+b)],R='#d62828',G='#0a8f3d';
+ wline(sl,...L(b1),{stroke:R,'stroke-width':3},{step:1,dur:900},'cp7');
+ group(sl,`<circle cx="${X(T1)}" cy="${Y(pH(T1))}" r="6" fill="${R}"/>`+txt(X(13.2),Y(7.0),'tangente 1','fill:'+R+';font-size:20px'),{step:1});
+ wline(sl,...L(b2),{stroke:R,'stroke-width':3},{step:2,dur:900},'cp7');
+ group(sl,`<circle cx="${X(T2)}" cy="${Y(pH(T2))}" r="6" fill="${R}"/>`+txt(X(13.2),Y(12.7),'tangente 2 // à 1','fill:'+R+';font-size:20px'),{step:2});
+ const s0=(Y(slope*25+b1)-Y(b1))/(X(25)-X(0)),k=Math.sqrt(1+s0*s0),P1=[X(T1),Y(slope*T1+b1)],dd=((b2-b1)*pxY)/k,nx=s0/k,ny=-1/k,P2=[P1[0]+nx*dd,P1[1]+ny*dd],M=[(P1[0]+P2[0])/2,(P1[1]+P2[1])/2];
+ wline(sl,P1[0]-nx*20,P1[1]-ny*20,P2[0]+nx*20,P2[1]+ny*20,{stroke:'#111','stroke-width':2.5},{step:3,dur:800});
+ group(sl,txt(P2[0]-150,P2[1]-8,'perpendiculaire','font-size:20px'),{step:3});
+ wline(sl,...L(bm),{stroke:G,'stroke-width':3,'stroke-dasharray':'9 6'},{step:4,dur:900},'cp7');
+ group(sl,`<circle cx="${M[0]}" cy="${M[1]}" r="6" fill="${G}"/>`+txt(X(13.2),Y(9.3),'parallèle équidistante','fill:'+G+';font-size:20px'),{step:4});
+ group(sl,`<line x1="${X(VBE2)}" x2="${X(VBE2)}" y1="${Y(pE)}" y2="${P.y+P.h}" stroke="${G}" stroke-width="3" stroke-dasharray="6 5"/><line x1="${P.x}" x2="${X(VBE2)}" y1="${Y(pE)}" y2="${Y(pE)}" stroke="${G}" stroke-width="3" stroke-dasharray="6 5"/><circle cx="${X(VBE2)}" cy="${Y(pE)}" r="9" fill="${G}"/>`+txt(X(VBE2)+14,Y(pE)+26,'E','fill:'+G+';font-size:24px')+txt(P.x+10,Y(pE)-10,'pH = '+f(pE,1),'fill:'+G+';font-size:22px')+txt(X(VBE2),P.y+P.h+58,VBEs+'<tspan dy="-5"> = '+f(VBE2,1)+' mL</tspan>','fill:'+G+';font-size:22px','middle'),{step:5});
+ captions(sl,['Étape 1 : tracez une première tangente à la courbe, avant le saut de pH.','Tangente 1 tracée. Étape 2 : tracez la seconde tangente, parallèle à la première, après le saut de pH.','Tangente 2 tracée. Étape 3 : tracez une droite perpendiculaire aux deux tangentes.','Étape 4 : placez le milieu du segment compris entre les deux tangentes, puis tracez la parallèle aux tangentes passant par ce milieu.','Étape 5 : cette droite coupe la courbe au point équivalent E. Son abscisse donne V<sub>BE</sub> et son ordonnée le pH à l’équivalence.','Lecture : <b>V<sub>BE</sub> = '+f(VBE2,1)+' mL</b> et <b>pH<sub>E</sub> = '+f(pE,1)+'</b>.'],606)}
+
+// ---------- 8. titre ----------
+titleSlide(['Exercice :','calcul de la concentration c<sub>A</sub>','de l’acide éthanoïque']);
+
+// ---------- 9. exercice ----------
+(function(){
+ const sl=addSlide('diagram',0,true);heading(sl,'Exercice : concentration de la solution d’acide éthanoïque');
+ const d=document.createElement('div');d.className='ex';
+ d.innerHTML=`<p>On titre un volume V<sub>A</sub> = 10,0 mL d’une solution d’acide éthanoïque, de concentration c<sub>A</sub> inconnue, par une solution de soude de concentration c<sub>B</sub> = 1,0×10<sup>−2</sup> mol/L. La réaction de titrage a pour équation :</p>
+ <p class="eq">CH<sub>3</sub>COOH<sub>(aq)</sub> + HO<sup>−</sup><sub>(aq)</sub> → CH<sub>3</sub>COO<sup>−</sup><sub>(aq)</sub> + H<sub>2</sub>O<sub>(ℓ)</sub></p>
+ <p>Le volume versé à l’équivalence, déterminé graphiquement, est <b>V<sub>BE</sub> = ${f(VBE,1)} mL</b>.</p>
+ <p><b>Question :</b> calculez la concentration en quantité de matière c<sub>A</sub> de la solution d’acide éthanoïque. Faites le calcul de votre côté, puis entrez le résultat (en mol/L) :</p>
+ <div class="row"><label for="ans">c<sub>A</sub> =</label><input type="text" id="ans" placeholder="ex : 2,5×10^-3" autocomplete="off"> mol/L <button id="chk">Vérifier</button><span id="fb"></span></div>
+ <div id="corr" hidden></div>`;
+ sl.ov.appendChild(d);
+ const sup={'⁰':0,'¹':1,'²':2,'³':3,'⁴':4,'⁵':5,'⁶':6,'⁷':7,'⁸':8,'⁹':9};
+ function parse(t){t=t.toLowerCase().replace(/\s/g,'').replace(/,/g,'.').replace(/−|–|⁻/g,'-').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g,c=>sup[c]).replace(/mol\/l|mol\.l-1|m$/,'');
+  const m=t.match(/^([\d.]+)[x×*]10\^?\(?(-?\d+)\)?$/);return m?parseFloat(m[1])*Math.pow(10,+m[2]):Number(t)}
+ function check(){const a=parse($('ans').value||''),c=CB*VBE/VA,ok=Math.abs(a-c)<=.03*c,e=$('fb');
+  if(!$('ans').value.trim()||isNaN(a)){e.textContent='';return}
+  e.textContent=ok?'✔ Juste':'✘ Faux';e.style.color=ok?'#0a8f3d':'#d62828';
+  const sci=x=>{const k=Math.floor(Math.log10(x)+1e-9);return f(x/Math.pow(10,k),1)+'×10<sup>'+(k<0?'−'+(-k):k)+'</sup>'};
+  $('corr').innerHTML=`<p><b>Correction : raisonnement</b></p><ol><li>À l’équivalence, les réactifs ont été introduits dans les proportions stœchiométriques ; d’après l’équation (coefficients 1 et 1) : n<sub>A</sub>/1 = n<sub>B</sub>/1.</li><li>Avec n<sub>A</sub> = c<sub>A</sub> × V<sub>A</sub> et n<sub>B</sub> = c<sub>B</sub> × V<sub>BE</sub>, on obtient c<sub>A</sub> × V<sub>A</sub> = c<sub>B</sub> × V<sub>BE</sub>.</li><li>D’où c<sub>A</sub> = c<sub>B</sub> × V<sub>BE</sub> / V<sub>A</sub>.</li><li>Application numérique (V<sub>BE</sub> et V<sub>A</sub> dans la même unité, ici en mL) :<br>c<sub>A</sub> = ${sci(CB)} × ${f(VBE,1)} / ${f(VA,1)} = <b>${sci(c)} mol/L</b></li></ol>`;$('corr').hidden=false}
+ $('chk').onclick=check;$('ans').onkeydown=e=>{if(e.key=='Enter')check()};$('ans').oninput=()=>{$('fb').textContent='';$('corr').hidden=true};
+ sl.onReset=()=>{$('ans').value='';$('fb').textContent='';$('corr').hidden=true};
+})();
+
+// ---------- animations ----------
+function apply(n,vis){
+  n.g.getAnimations().forEach(a=>a.cancel());
+  if(n.ml){n.ml.getAnimations().forEach(a=>a.cancel());n.ml.style.strokeDashoffset=vis?0:1;n.g.style.opacity=1}
+  else if(n.path){n.path.style.strokeDashoffset=vis?0:1;n.path.style.opacity=1}
+  else n.g.style.opacity=vis?1:0}
+function play(n){const o={duration:n.dur||500,fill:'backwards',easing:'linear'};
+  if(n.ml)n.ml.animate([{strokeDashoffset:1},{strokeDashoffset:0}],o);
+  else if(n.path)n.path.animate([{strokeDashoffset:1},{strokeDashoffset:0}],o);
+  else n.g.animate([{opacity:0},{opacity:1}],o)}
+let cur=0,step=0;
+function render(si,k,animate){const sl=slides[si];if(sl.kind!=='diagram')return;
+  sl.nodes.forEach(n=>{const vis=k>=n.step&&k<=n.until;apply(n,vis);if(animate&&vis&&n.step===k&&k>0)play(n)})}
+function show(si,k,animate){
+  // Navigation séquentielle : impossible de sauter une diapositive ou de quitter une étape inachevée.
+  if(si>cur){
+    if(si>cur+1){hint.textContent='Suivez les diapositives dans l’ordre et terminez chaque étape avant de poursuivre.';hint.classList.remove('off');return;}
+    const current=slides[cur];
+    if(current.interactive&&typeof window.titrageVolumeComplet==='function'&&!window.titrageVolumeComplet()){
+      hint.innerHTML='Terminez le versement et les mesures : V<sub>B</sub> doit atteindre 25,0 mL avant de poursuivre.';hint.classList.remove('off');return;
+    }
+    if(!current.interactive&&step<current.steps){
+      hint.textContent='Terminez toutes les étapes de cette diapositive avant de passer à la suivante.';hint.classList.remove('off');return;
+    }
+  }
+  if(slides[cur]&&cur!==si&&slides[cur].onLeave)slides[cur].onLeave();
+  cur=si;step=k;slides.forEach((s,i)=>s.el.classList.toggle('on',i===si));render(si,k,animate);updateUI()}
+function updateUI(){const sl=slides[cur];
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===cur));
+  $('prev').disabled=(cur===0&&step===0);$('next').disabled=(cur===slides.length-1&&step>=sl.steps);
+  $('info').textContent='Diapo '+(cur+1)+'/'+slides.length+(sl.steps?' · étape '+step+'/'+sl.steps:'');
+  hint.textContent='Clic, espace ou → pour continuer';hint.classList.toggle('off',!(sl.kind==='diagram'&&sl.steps>0&&step===0))}
+function next(){const sl=slides[cur];if(step<sl.steps)show(cur,step+1,true);else if(cur<slides.length-1)show(cur+1,0,false)}
+function prev(){if(step>0)show(cur,step-1,false);else if(cur>0)show(cur-1,slides[cur-1].steps,false)}
+// ---------- lecture auto ----------
+let autoT=null;
+function stopAuto(){clearTimeout(autoT);autoT=null;$('auto').textContent='▶ Lecture auto'}
+function tick(){const sl=slides[cur];if(cur===slides.length-1&&step>=sl.steps){stopAuto();return}
+  const wasLast=step>=sl.steps;next();
+  if(slides[cur].interactive){stopAuto();return}
+  autoT=setTimeout(tick,wasLast?2200:(slides[cur].kind==='diagram'?1900:1800))}
+$('auto').onclick=()=>{if(autoT){stopAuto();return}$('auto').textContent='❚❚ Pause';
+  if(cur===slides.length-1&&step>=slides[cur].steps)show(0,0,false);autoT=setTimeout(tick,200)};
+// ---------- contrôles ----------
+const dotsEl=$('dots');
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.setAttribute('aria-label','Diapositive '+(i+1));
+  b.onclick=e=>{e.stopPropagation();stopAuto();show(i,0,false)};dotsEl.appendChild(b)});
+$('next').onclick=()=>{stopAuto();next()};$('prev').onclick=()=>{stopAuto();prev()};
+$('reset').onclick=()=>{stopAuto();const sl=slides[cur];sl.onReset&&sl.onReset();show(cur,0,false)};
+if(!document.documentElement.requestFullscreen)$('fs').hidden=true;
+$('fs').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()};
+stage.addEventListener('click',()=>{if(slides[cur].interactive)return;stopAuto();next()});
+addEventListener('keydown',e=>{const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;if(t==='BUTTON'&&(e.key===' '||e.key==='Enter'))return;
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();stopAuto();next()}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(e.key)){e.preventDefault();stopAuto();prev()}
+  else if(e.key==='Home'){stopAuto();show(0,0,false)}
+  else if(e.key==='End'){stopAuto();show(slides.length-1,slides[slides.length-1].steps,false)}
+  else if(e.key==='f'||e.key==='F'){$('fs').click()}});
+function fit(){stage.style.setProperty('--u',(stage.clientWidth/960)+'px')}
+addEventListener('resize',fit);fit();new ResizeObserver(fit).observe(stage);
+// URL ?s=7&k=3 pour ouvrir directement un état
+const q=new URLSearchParams(location.search);
+const qs=Math.max(0,Math.min(slides.length-1,(+q.get('s')||1)-1));
+show(qs,Math.min(slides[qs].steps,+q.get('k')||0),false);
+</script>
+</body>
+</html>
